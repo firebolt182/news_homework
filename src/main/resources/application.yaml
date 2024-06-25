@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      show-sql: true
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/news
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        orm:
+          jdbc:
+            bind: TRACE
