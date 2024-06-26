@@ -17,11 +17,12 @@ public class CategoryDto {
     private String name;
     private List<NewsDto> news = new ArrayList<>();
 
+    public CategoryDto(String name) {
+        this.name = name;
+    }
+
     @Override
     public String toString() {
-        return "%s: \n%s".formatted(name, news.toString()
-                .replace("[", "")
-                .replace("]", "")
-                .replace(",", ""));
+        return name;
     }
 }

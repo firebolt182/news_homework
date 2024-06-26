@@ -13,9 +13,11 @@ import org.javaacademy.news_homework.repository.CategoryRepository;
 import org.javaacademy.news_homework.repository.NewsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,9 +57,7 @@ public class NewsService {
 
         /*@PostConstruct
         public void init() {
-            createNewsTest();
-            List<Category> todayNews = findTodayNews();
-            System.out.println(todayNews);
+            findNews();
         }*/
 
 
@@ -80,21 +80,20 @@ public class NewsService {
 
     @Transactional(readOnly = true)
     public String findTodayNews() {
-        List<News> todayNews =
-                newsRepository.findNewsByDate(LocalDate.now()).orElseThrow();
-        List<Category> categoryList = getActualCategoriesForToday(todayNews);
-        StringBuilder builder = new StringBuilder();
-        builder.append(parseDate(LocalDate.now()));
-        return getNewsSortedByCategory(todayNews, categoryList, builder);
+        StringBuilder builder = new StringBuilder(parseDate(LocalDate.now()));
+
+        List<NewsDto> todayNews = newsMapper.convertToDto(
+                newsRepository.findNewsByDate(LocalDate.now()).orElseThrow());
+        Set<CategoryDto> categorySet = getActualCategoriesForToday(todayNews);
+        return getNewsSortedByCategory(todayNews, categorySet, builder);
     }
 
     @Transactional(readOnly = true)
     public String findNewsByDateAndCategory(LocalDate date, String categoryName) {
         Category category = categoryRepository.findCategoryByName(categoryName).orElseThrow();
-        List<News> news = newsRepository.findNewsByDateAndCategory(date,
-                category).orElseThrow();
-        StringBuilder builder = new StringBuilder();
-        builder.append(parseDate(date));
+        List<NewsDto> news = newsMapper.convertToDto(newsRepository.findNewsByDateAndCategory(date,
+                category).orElseThrow());
+        StringBuilder builder = new StringBuilder(parseDate(date));
         builder.append(categoryName).append("\n");
         news.forEach(story -> builder.append(story).append("\n"));
         return builder.toString();
@@ -107,22 +106,21 @@ public class NewsService {
                 date.getYear());
     }
 
-    private String getNewsSortedByCategory(List<News> todayNews,
-                                           List<Category> categories,
+    private String getNewsSortedByCategory(List<NewsDto> todayNews,
+                                           Set<CategoryDto> categories,
                                            StringBuilder builder) {
-        for (int i = 0; i < categories.size(); i++) {
-            final Integer iteration = i;
-            builder.append(categories.get(iteration) + "\n");
-            todayNews.stream()
-                    .filter(news -> news.getCategory().equals(categories.get(iteration)))
-                    .forEach(news -> builder.append(news + "\n"));
-        }
+            for (CategoryDto category : categories) {
+                builder.append(category).append("\n");
+                todayNews.stream()
+                        .filter(news -> news.getCategoryDto().getName().equals(category.getName()))
+                        .forEach(builder::append);
+            }
         return builder.toString();
     }
 
-    private List<Category> getActualCategoriesForToday(List<News> todayNews) {
+    private Set<CategoryDto> getActualCategoriesForToday(List<NewsDto> todayNews) {
         return todayNews.stream()
-                .map(News::getCategory)
-                .toList();
+                .map(NewsDto::getCategoryDto)
+                .collect(Collectors.toSet());
     }
 }
