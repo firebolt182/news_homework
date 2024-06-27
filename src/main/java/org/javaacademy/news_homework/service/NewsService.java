@@ -1,6 +1,5 @@
 package org.javaacademy.news_homework.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.javaacademy.news_homework.dto.CategoryDto;
 import org.javaacademy.news_homework.dto.NewsDto;
@@ -15,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,41 +25,6 @@ public class NewsService {
     private final CategoryRepository categoryRepository;
     private final NewsMapper newsMapper;
     private final CategoryMapper categoryMapper;
-
-
-    public void createNewsTest() {
-        createNews(NewsDtoRq.builder()
-                .header("test header")
-                .categoryName("sport")
-                .date(LocalDate.now())
-                .text("test text")
-                .build());
-        createNews(NewsDtoRq.builder()
-                .header("big trees")
-                .categoryName("nature")
-                .date(LocalDate.now())
-                .text("big trees were found")
-                .build());
-        createNews(NewsDtoRq.builder()
-                .header("hat-trick from Orel")
-                .categoryName("sport")
-                .date(LocalDate.now())
-                .text("today blah-blah")
-                .build());
-        createNews(NewsDtoRq.builder()
-                .header("man drinks 4 whiskey bottles ")
-                .categoryName("health")
-                .date(LocalDate.of(2024, 11, 22))
-                .text("it is amazing")
-                .build());
-    }
-
-        /*@PostConstruct
-        public void init() {
-            findNews();
-        }*/
-
-
 
     @Transactional
     public void createNews(NewsDtoRq dto) {
@@ -74,14 +38,14 @@ public class NewsService {
             categoryRepository.save(category);
             news.setCategory(category);
         }
-        newsRepository.save(news);
-        System.out.println(news);
+        finally {
+            newsRepository.save(news);
+        }
     }
 
     @Transactional(readOnly = true)
     public String findTodayNews() {
         StringBuilder builder = new StringBuilder(parseDate(LocalDate.now()));
-
         List<NewsDto> todayNews = newsMapper.convertToDto(
                 newsRepository.findNewsByDate(LocalDate.now()).orElseThrow());
         Set<CategoryDto> categorySet = getActualCategoriesForToday(todayNews);
@@ -90,12 +54,17 @@ public class NewsService {
 
     @Transactional(readOnly = true)
     public String findNewsByDateAndCategory(LocalDate date, String categoryName) {
-        Category category = categoryRepository.findCategoryByName(categoryName).orElseThrow();
-        List<NewsDto> news = newsMapper.convertToDto(newsRepository.findNewsByDateAndCategory(date,
-                category).orElseThrow());
         StringBuilder builder = new StringBuilder(parseDate(date));
-        builder.append(categoryName).append("\n");
-        news.forEach(story -> builder.append(story).append("\n"));
+        try {
+            Category category = categoryRepository.findCategoryByName(categoryName).orElseThrow();
+            List<NewsDto> news = newsMapper.convertToDto(newsRepository.findNewsByDateAndCategory(date,
+                    category).orElseThrow());
+            builder.append(categoryName).append("\n");
+            news.forEach(story -> builder.append(story).append("\n"));
+        } catch (NoSuchElementException e) {
+            return "";
+        }
+
         return builder.toString();
     }
 

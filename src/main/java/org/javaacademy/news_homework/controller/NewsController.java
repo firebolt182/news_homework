@@ -1,16 +1,12 @@
 package org.javaacademy.news_homework.controller;
 
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
-import org.javaacademy.news_homework.dto.CategoryDto;
 import org.javaacademy.news_homework.dto.NewsDtoRq;
-import org.javaacademy.news_homework.entity.Category;
 import org.javaacademy.news_homework.service.NewsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/news")

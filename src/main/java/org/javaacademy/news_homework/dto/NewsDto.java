@@ -1,13 +1,10 @@
 package org.javaacademy.news_homework.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
-import org.javaacademy.news_homework.entity.Category;
-
 import java.time.LocalDate;
+import lombok.*;
 
 @Data
-@NoArgsConstructor
 @Builder
 @AllArgsConstructor
 public class NewsDto {
